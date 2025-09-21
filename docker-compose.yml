@@ -1,0 +1,37 @@
+# Docker Compose configuration for the Artisan Marketplace Multi-Agent System
+
+version: '3.8'
+
+services:
+  artisan-marketplace-ai:
+    build: .
+    ports:
+      - "8000:8000"  # API server
+      - "8501:8501"  # Web interface
+    environment:
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
+      - GCS_CREDENTIALS_PATH=/app/credentials/gcs-key.json
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./credentials:/app/credentials:ro
+      - ./logs:/app/logs
+      - ./test_output:/app/test_output
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Redis for caching (if needed in future)
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   restart: unless-stopped
+
+networks:
+  default:
+    name: artisan-marketplace-network
